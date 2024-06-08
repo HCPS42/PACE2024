@@ -169,16 +169,47 @@ vector<int> improve_comp(vector<int> comp, const vector<vector<int>>& c) {
     if (comp.size() <= 2) {
         return comp;
     }
-    for (int it = 1; it <= 1000; it++) {
-        for (int i = 0; i + 1 < comp.size(); i++) {
-            int u = comp[i];
-            int v = comp[i + 1];
-            if (c[u][v] > c[v][u]) {
-                swap(comp[i], comp[i + 1]);
-            }
+
+    int s = comp[0];
+    ll best_sum = 0;
+    for (int v : comp) {
+        best_sum += c[s][v];
+    }
+    for (int v : comp) {
+        ll sum = 0;
+        for (int u : comp) {
+            sum += c[v][u];
+        }
+        if (sum < best_sum) {
+            best_sum = sum;
+            s = v;
         }
     }
-    return comp;
+
+    vector<int> res{s};
+    set<int> all(comp.begin(), comp.end());
+    all.erase(s);
+
+    while (!all.empty()) {
+        int x = *all.begin();
+        ll best_sum = 0;
+        for (int v : res) {
+            best_sum += c[v][x];
+        }
+        for (int y : all) {
+            ll sum = 0;
+            for (int v : res) {
+                sum += c[v][y];
+            }
+            if (sum < best_sum) {
+                best_sum = sum;
+                x = y;
+            }
+        }
+        all.erase(x);
+        res.push_back(x);
+    }
+    return res;
 }
 
 void solve_heuristics(int n, int m, vector<pair<int, int>> es) {
