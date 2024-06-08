@@ -105,68 +105,155 @@ void Solve() {
     }
 }
 
-int calc_crossings_tiny(const vector<pair<int, int>>& es, const vector<int>& p) {
-    map<int, int> whe;
-    for (int i = 0; i < p.size(); i++) {
-        whe[p[i]] = i;
-    }
-    int res = 0;
-    for (int i = 0; i < es.size(); i++) {
-        for (int j = i + 1; j < es.size(); j++) {
-            auto [u1, v1] = es[i];
-            auto [u2, v2] = es[j];
-            if (u1 < u2 && whe[v1] > whe[v2]) {
-                res++;
-            }
-            else if (u1 > u2 && whe[v1] < whe[v2]) {
-                res++;
-            }
-        }
-    }
-    return res;
-}
-
-void solve_tiny(int n, int m, vector<pair<int, int>> es) {
-    vector<int> p(m);
-    iota(p.begin(), p.end(), n + 1);
-    vector<int> ans = p;
-    int best = calc_crossings_tiny(es, p);
-    do {
-        int cur = calc_crossings_tiny(es, p);
-        if (cur < best) {
-            best = cur;
-            ans = p;
-        }
-    } while (next_permutation(p.begin(), p.end()));
-    for (int i : ans) {
+void answer(vector<int>& a, const vector<vector<int>>& c) {
+    for (int i : a) {
+#ifndef LOCAL
         cout << i << "\n";
+#endif
+    }
+    if (c.empty()) {
+        return;
+    }
+    int n = *min_element(a.begin(), a.end()) - 1;
+    ll num_of_intersection = 0;
+    for (int i = 0; i < a.size(); i++) {
+        for (int j = i + 1; j < a.size(); j++) {
+            num_of_intersection += c[a[i] - n - 1][a[j] - n - 1];
+        }
+    }
+    out(num_of_intersection);
+}
+
+void dfs_inv(int v, vector<bool>& used, vector<int>& post, const vector<vector<int>>& g_inv) {
+    used[v] = true;
+    for (int u : g_inv[v]) {
+        if (!used[u]) {
+            dfs_inv(u, used, post, g_inv);
+        }
+    }
+    post.push_back(v);
+}
+
+void dfs(int v, vector<bool>& used, vector<int>& comp, const vector<vector<int>>& g) {
+    used[v] = true;
+    comp.push_back(v);
+    for (int u : g[v]) {
+        if (!used[u]) {
+            dfs(u, used, comp, g);
+        }
     }
 }
 
-struct E {
-    int id;
-    ll cnt;
-    ll sum;
-};
+vector<vector<int>> kosaraju(const vector<vector<int>> (&g)[2]) {
+    int m = (int) g[0].size();
+    vector<bool> used(m, false);
+    vector<int> post;
+    for (int i = 0; i < m; i++) {
+        if (!used[i]) {
+            dfs_inv(i, used, post, g[1]);
+        }
+    }
+    reverse(post.begin(), post.end());
+    used.assign(m, false);
+    vector<vector<int>> comps;
+    for (int v : post) {
+        if (used[v]) continue;
+        vector<int> comp;
+        dfs(v, used, comp, g[0]);
+        comps.push_back(comp);
+    }
+    return comps;
+}
 
-bool operator<(const E& a, const E& b) {
-    return a.sum * b.cnt < b.sum * a.cnt;
+vector<int> improve_comp(vector<int> comp, const vector<vector<int>>& c) {
+    if (comp.size() <= 2) {
+        return comp;
+    }
+    for (int it = 1; it <= 1000; it++) {
+        for (int i = 0; i + 1 < comp.size(); i++) {
+            int u = comp[i];
+            int v = comp[i + 1];
+            if (c[u][v] > c[v][u]) {
+                swap(comp[i], comp[i + 1]);
+            }
+        }
+    }
+    return comp;
 }
 
 void solve_heuristics(int n, int m, vector<pair<int, int>> es) {
-    sort(es.begin(), es.end());
+    out(n, m, es.size());
 
-    vector<E> a;
-    for (int i = 0; i < m; i++) {
-        a.push_back({i + n + 1, 0, 0});
+    vector<vector<int>> c;
+    if (m > 11'000) { // maybe increase???
+        vector<int> ans(m);
+        iota(ans.begin(), ans.end(), n + 1);
+        mt19937 rnd;
+        shuffle(ans.begin(), ans.end(), rnd);
+        answer(ans, c);
+        return;
     }
+    vector<vector<int>> G(m);
     for (auto [u, v] : es) {
-        a[v - n - 1].cnt++;
-        a[v - n - 1].sum += u;
+        G[v - n - 1].push_back(u);
     }
-    sort(a.begin(), a.end());
+    for (auto& s : G) {
+        sort(s.begin(), s.end());
+    }
+    c.assign(m, vector<int>(m, 0));
+    
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < m; j++) {
+            if (i == j) continue;
+            int cnt = 0;
+            int ptr = -1;
+            for (int k = 0; k < G[i].size(); k++) {
+                while (ptr + 1 < G[j].size() && G[j][ptr + 1] < G[i][k]) {
+                    ptr++;
+                }
+                cnt += ptr + 1;
+            }
+            c[i][j] = cnt;
+        }
+    }
 
-    for (auto [id, cnt, sum] : a) {
-        cout << id << "\n";
+    G.clear();
+
+    ll trivial_lower_bound = 0;
+    for (int i = 0; i < m; i++) {
+        for (int j = i + 1; j < m; j++) {
+            trivial_lower_bound += min(c[i][j], c[j][i]);
+        }
     }
+
+    out(trivial_lower_bound);
+
+    vector<vector<int>> g[2];
+    g[0].resize(m);
+    g[1].resize(m);
+
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < m; j++) {
+            if (i == j) continue;
+            if (c[i][j] < c[j][i]) {
+                g[0][i].push_back(j);
+                g[1][j].push_back(i);
+            }
+        }
+    }
+
+    auto comps = kosaraju(g);
+
+    reverse(comps.begin(), comps.end());
+    vector<int> ans;
+    for (auto& comp : comps) {
+        if (!tle) {
+            comp = improve_comp(comp, c);
+        }
+        for (int v : comp) {
+            ans.push_back(v + n + 1);
+        }
+    }
+    answer(ans, c);
 }
+
