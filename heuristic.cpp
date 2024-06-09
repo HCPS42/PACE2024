@@ -53,18 +53,6 @@ int main() {
     return 0;
 }
 
-// do something, stay focused
-// look for stupid bugs
-// guess, slow, stress
-// don't overgeneralize
-// don't rush
-
-// don't waste time on standings
-
-// SOLVE THE PROBLEM OR DIE TRYING
-// THE SOLUTION IS ALWAYS SIMPLE
-// THE CODE IS ALWAYS SHORT
-
 volatile sig_atomic_t tle = 0;
 void term(int signum) { tle = 1; }
 
