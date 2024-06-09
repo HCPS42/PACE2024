@@ -182,11 +182,67 @@ ll calc_cost(const vector<int>& a, const vector<vector<int>>& c) {
     return res;
 }
 
+const int B = 10;
+
+vector<int> divide_and_conquer(vector<int> comp, const vector<vector<int>>& c) {
+    if (tle) {
+        return comp;
+    }
+    if (comp.size() <= 10) {
+        sort(comp.begin(), comp.end());
+        auto best = comp;
+        ll best_cost = calc_cost(comp, c);
+        do {
+            ll cost = calc_cost(comp, c);
+            if (cost < best_cost) {
+                best_cost = cost;
+                best = comp;
+            }
+        } while (next_permutation(comp.begin(), comp.end()));
+        return best;
+    }
+    vector<int> lef;
+    vector<int> rig;
+    int m = 1;
+    while (m * 10 < comp.size()) {
+        m *= 10;
+    } 
+    for (int i = 0; i < comp.size(); i++) {
+        if (i < m) {
+            lef.push_back(comp[i]);
+        }
+        else {
+            rig.push_back(comp[i]);
+        }
+    }
+    lef = divide_and_conquer(lef, c);
+    rig = divide_and_conquer(rig, c);
+    comp.clear();
+    for (int i : lef) comp.push_back(i);
+    for (int i : rig) comp.push_back(i);
+    vector<int> rev_comp;
+    for (int i : rig) rev_comp.push_back(i);
+    for (int i : lef) rev_comp.push_back(i);
+    if (calc_cost(comp, c) < calc_cost(rev_comp, c)) {
+        return comp;
+    }
+    else {
+        return rev_comp;
+    }
+}
+
+
+
 vector<int> improve_comp(vector<int> comp, const vector<vector<int>>& c) {
     if (comp.size() <= 2) {
         return comp;
     }
 
+    // barycenters
+    
+
+    
+    ///* greedy
     int s = comp[0];
     ll best_sum = 0;
     for (int v : comp) {
@@ -227,36 +283,8 @@ vector<int> improve_comp(vector<int> comp, const vector<vector<int>>& c) {
         res.push_back(x);
     }
 
-    const int B = 10;
+    comp = divide_and_conquer(comp, c);
 
-    comp = res;
-    res.clear();
-
-    for (int i = 0; i < comp.size(); i += B) {
-        vector<int> cur;
-        for (int j = 0; j < B && i + j < comp.size(); j++) {
-            cur.push_back(comp[i + j]);
-        }
-        
-        auto best = cur;
-        ll best_cost = calc_cost(cur, c);
-
-        if (!tle) {
-            sort(cur.begin(), cur.end());
-            do {
-                ll cost = calc_cost(cur, c);
-                if (cost < best_cost) {
-                    best_cost = cost;
-                    best = cur;
-                }
-            } while (next_permutation(cur.begin(), cur.end()));
-        }
-
-        for (int j : best) {
-            res.push_back(j);
-        }
-    }
-    
     return res;
 }
 
