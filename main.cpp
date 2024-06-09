@@ -293,10 +293,19 @@ void solve_heuristics(int n, int m, vector<pair<int, int>> es) {
 
     vector<vector<int>> c;
     if (m > 15'000) { // maybe increase???
-        vector<int> ans(m);
-        iota(ans.begin(), ans.end(), n + 1);
-        mt19937 rnd;
-        shuffle(ans.begin(), ans.end(), rnd);
+        vector<E> a;
+        for (int i = 0; i < m; i++) {
+            a.push_back({i + n + 1, 0, 0});
+        }
+        for (auto [u, v] : es) {
+            a[v - n - 1].cnt++;
+            a[v - n - 1].sum += u;
+        }
+        sort(a.begin(), a.end());
+        vector<int> ans;
+        for (auto [id, cnt, sum] : a) {
+            ans.push_back(id);
+        }
         answer(ans, c);
         return;
     }
