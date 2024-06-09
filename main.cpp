@@ -203,10 +203,7 @@ vector<int> divide_and_conquer(vector<int> comp, const vector<vector<int>>& c) {
     }
     vector<int> lef;
     vector<int> rig;
-    int m = 1;
-    while (m * 10 < comp.size()) {
-        m *= 10;
-    } 
+    int m = comp.size() / 2;
     for (int i = 0; i < comp.size(); i++) {
         if (i < m) {
             lef.push_back(comp[i]);
@@ -283,7 +280,23 @@ vector<int> improve_comp(vector<int> comp, const vector<vector<int>>& c) {
         res.push_back(x);
     }
 
-    comp = divide_and_conquer(comp, c);
+    //comp = divide_and_conquer(comp, c);
+    
+    comp = res;
+    res.clear();
+
+    const int BLOCKS = 1 << 12;
+
+    for (int i = 0; i < comp.size(); i += BLOCKS * B) {
+        vector<int> cur;
+        for (int j = 0; j < BLOCKS * B && i + j < comp.size(); j++) {
+            cur.push_back(comp[i + j]);
+        }
+        cur = divide_and_conquer(cur, c);
+        for (int v : cur) {
+            res.push_back(v);
+        }
+    }
 
     return res;
 }
