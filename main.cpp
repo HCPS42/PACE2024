@@ -184,11 +184,13 @@ ll calc_cost(const vector<int>& a, const vector<vector<int>>& c) {
 
 const int B = 10;
 
+//int perms = 0;
+
 vector<int> divide_and_conquer(vector<int> comp, const vector<vector<int>>& c) {
     if (tle) {
         return comp;
     }
-    if (comp.size() <= 10) {
+    if (comp.size() <= B) {
         sort(comp.begin(), comp.end());
         auto best = comp;
         ll best_cost = calc_cost(comp, c);
@@ -198,6 +200,7 @@ vector<int> divide_and_conquer(vector<int> comp, const vector<vector<int>>& c) {
                 best_cost = cost;
                 best = comp;
             }
+            //perms++;
         } while (next_permutation(comp.begin(), comp.end()));
         return best;
     }
@@ -228,64 +231,46 @@ vector<int> divide_and_conquer(vector<int> comp, const vector<vector<int>>& c) {
     }
 }
 
+struct E {
+    int id;
+    ll cnt;
+    ll sum;
+};
 
+bool operator<(const E& a, const E& b) {
+    return a.sum * b.cnt < b.sum * a.cnt;
+}
 
-vector<int> improve_comp(vector<int> comp, const vector<vector<int>>& c) {
+vector<int> improve_comp(vector<int> comp, const vector<vector<int>>& c, const vector<pair<int, int>>& es, int n) {
     if (comp.size() <= 2) {
         return comp;
     }
 
+    if (comp.size() > 100) {
+        out(comp.size());
+    }
+
     // barycenters
     
-
-    
-    ///* greedy
-    int s = comp[0];
-    ll best_sum = 0;
-    for (int v : comp) {
-        best_sum += c[s][v];
+    vector<E> p;
+    map<int, int> whe;
+    for (int i = 0; i < comp.size(); i++) {
+        p.push_back({comp[i], 0, 0});
+        whe[comp[i]] = i;
     }
-    for (int v : comp) {
-        ll sum = 0;
-        for (int u : comp) {
-            sum += c[v][u];
-        }
-        if (sum < best_sum) {
-            best_sum = sum;
-            s = v;
-        }
+    for (auto [u, v] : es) {
+        p[whe[v - n - 1]].cnt++;
+        p[whe[v - n - 1]].sum += u;
     }
-
-    vector<int> res{s};
-    set<int> all(comp.begin(), comp.end());
-    all.erase(s);
-
-    while (!all.empty()) {
-        int x = *all.begin();
-        ll best_sum = 0;
-        for (int v : res) {
-            best_sum += c[v][x];
-        }
-        for (int y : all) {
-            ll sum = 0;
-            for (int v : res) {
-                sum += c[v][y];
-            }
-            if (sum < best_sum) {
-                best_sum = sum;
-                x = y;
-            }
-        }
-        all.erase(x);
-        res.push_back(x);
+    sort(p.begin(), p.end());
+    comp.clear();
+    for (auto [id, cnt, sum] : p) {
+        comp.push_back(id);
     }
+     
+    vector<int> res;
 
-    //comp = divide_and_conquer(comp, c);
-    
-    comp = res;
-    res.clear();
-
-    const int BLOCKS = 1 << 12;
+    int BLOCKS = 4;
 
     for (int i = 0; i < comp.size(); i += BLOCKS * B) {
         vector<int> cur;
@@ -297,6 +282,8 @@ vector<int> improve_comp(vector<int> comp, const vector<vector<int>>& c) {
             res.push_back(v);
         }
     }
+
+    //out(perms);
 
     return res;
 }
@@ -368,7 +355,7 @@ void solve_heuristics(int n, int m, vector<pair<int, int>> es) {
     vector<int> ans;
     for (auto& comp : comps) {
         if (!tle) {
-            comp = improve_comp(comp, c);
+            comp = improve_comp(comp, c, es, n);
         }
         for (int v : comp) {
             ans.push_back(v + n + 1);
