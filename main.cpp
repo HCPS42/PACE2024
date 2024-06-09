@@ -87,7 +87,14 @@ void Solve() {
             string useless;
             string id;
             int n0, n1, m;
-            s >> useless >> id >> n0 >> n1 >> m;
+            int cw;
+            s >> useless >> id >> n0 >> n1 >> m >> cw;
+            vector<int> cw_order(n0 + n1);
+            for (int i = 0; i < n0 + n1; i++) {
+                getline(cin, line);
+                stringstream t(line);
+                t >> cw_order[i];
+            }
             vector<pair<int, int>> es;
             for (int i = 1; i <= m; i++) {
                 getline(cin, line);
@@ -96,7 +103,6 @@ void Solve() {
                 t >> u >> v;
                 es.emplace_back(u, v);
             }
-            //solve_tiny(n0, n1, es);
             solve_heuristics(n0, n1, es);
         }
         else {

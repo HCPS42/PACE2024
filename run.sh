@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cp tests/big/$1.gr input.txt
+cp tests/param/$1.gr input.txt
 
 # Compile main.cpp with g++
 g++ -g -O2 -std=gnu++2a -DLOCAL main.cpp -o PACE2024
