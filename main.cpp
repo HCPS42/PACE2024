@@ -122,6 +122,13 @@ void answer(vector<int>& a, const vector<vector<int>>& c) {
         }
     }
     out(num_of_intersection);
+
+    int m = (int) c.size();
+    assert(a.size() == c.size());
+    sort(a.begin(), a.end());
+    for (int i = 0; i < m; i++) {
+        assert(a[i] == n + 1 + i);
+    }
 }
 
 void dfs_inv(int v, vector<bool>& used, vector<int>& post, const vector<vector<int>>& g_inv) {
@@ -163,6 +170,16 @@ vector<vector<int>> kosaraju(const vector<vector<int>> (&g)[2]) {
         comps.push_back(comp);
     }
     return comps;
+}
+
+ll calc_cost(const vector<int>& a, const vector<vector<int>>& c) {
+    ll res = 0;
+    for (int i = 0; i < a.size(); i++) {
+        for (int j = i + 1; j < a.size(); j++) {
+            res += c[a[i]][a[j]];
+        }
+    }
+    return res;
 }
 
 vector<int> improve_comp(vector<int> comp, const vector<vector<int>>& c) {
@@ -209,6 +226,37 @@ vector<int> improve_comp(vector<int> comp, const vector<vector<int>>& c) {
         all.erase(x);
         res.push_back(x);
     }
+
+    const int B = 10;
+
+    comp = res;
+    res.clear();
+
+    for (int i = 0; i < comp.size(); i += B) {
+        vector<int> cur;
+        for (int j = 0; j < B && i + j < comp.size(); j++) {
+            cur.push_back(comp[i + j]);
+        }
+        
+        auto best = cur;
+        ll best_cost = calc_cost(cur, c);
+
+        if (!tle) {
+            sort(cur.begin(), cur.end());
+            do {
+                ll cost = calc_cost(cur, c);
+                if (cost < best_cost) {
+                    best_cost = cost;
+                    best = cur;
+                }
+            } while (next_permutation(cur.begin(), cur.end()));
+        }
+
+        for (int j : best) {
+            res.push_back(j);
+        }
+    }
+    
     return res;
 }
 
@@ -216,7 +264,7 @@ void solve_heuristics(int n, int m, vector<pair<int, int>> es) {
     out(n, m, es.size());
 
     vector<vector<int>> c;
-    if (m > 11'000) { // maybe increase???
+    if (m > 15'000) { // maybe increase???
         vector<int> ans(m);
         iota(ans.begin(), ans.end(), n + 1);
         mt19937 rnd;
